@@ -81,20 +81,35 @@
 ## Variables Explained
 
 OrderNumber = code for each order
+
 SalesChannel = the channel the sale was made through (online, in-person, distributor, wholesale)
+
 WharehouseCode = code for the warehouse involved in the sale
+
 ProcuredDate = date when products were procured (DD/MM/YY)
+
 OrderDate = date when order placed (DD/MM/YY)
+
 ShipDate = date when order shipped (DD/MM/YY)
+
 DeliveryDate = date when order arrived to customer (DD/MM/YY)
+
 CurrencyCode = code for currency used (all USD)
+
 SalesTeamID = a unique number for each sales team 
+
 CustomerID = a unique number for each customer
+
 StoreID = a unique number for each store
+
 ProductID = a unique number for each product 
+
 OrderQuantity = number of product ordered in sale
+
 DiscountApplied = discount applied to the order 
+
 UnitCost = the cost of a single unit of the product
+
 UnitPrice = the price of a single unit of the product sold 
 
 ## Dependencies
