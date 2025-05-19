@@ -1,0 +1,287 @@
+---
+title: "Payne_US_Regional_Sales"
+author: "Konnor Payne"
+output: word_document
+---
+
+```{r}
+library(ggplot2)
+library(lubridate)
+library(modelsummary)
+library(dplyr)
+library(GGally)
+library(neuralnet)
+library(leaps)
+library(performance)
+```
+
+IMPORTING AND CLEANING THE DATASET
+```{r}
+#importing the dataset from github
+sales=read.csv("https://raw.githubusercontent.com/konpayne/US-Regional-Sales/refs/heads/main/US_Regional_Sales_Data.csv", sep=",")
+#dimensions of dataset 
+dim(sales)
+#summary of data
+summary(sales)
+
+#convert character to factor for OrderNumber, Sales.Channel, WarehousCode, CurrencyCode
+sales[,c(1,2,3,8)]=lapply(sales[,c(1,2,3,8)], as.factor)
+
+#convert date data from character to date 
+sales$ProcuredDate=dmy(sales$ProcuredDate)
+sales$OrderDate=dmy(sales$OrderDate)
+sales$ShipDate=dmy(sales$ShipDate)
+sales$DeliveryDate=dmy(sales$DeliveryDate)
+
+#remove commas
+sales$Unit.Cost=gsub(",", "", sales$Unit.Cost)
+sales$Unit.Price=gsub(",","", sales$Unit.Price)
+#convert Unit.Cost and Unit.Price from character to numeric
+sales[,c(15,16)]=lapply(sales[,c(15,16)], as.numeric)
+
+#convert integer to factor for X_SalesTeamID, X_CustomerID, X_StoreID, X_ProductID
+sales[,9:12]=lapply(sales[,9:12], as.factor)
+
+#drop currency since it is all in USD and not helpful for any further analysis
+sales$CurrencyCode=NULL
+
+#check that everything is proper data type 
+summary(sales)
+#looks all good 
+
+#checking for missing values 
+sum(is.na(sales)) 
+#no missing values
+```
+
+```{r}
+#formal data summary table after data cleaning 
+datasummary_skim(sales)
+```
+
+
+Sales over time based on order date 
+```{r}
+#exploring the seasonal changes of sales over the years 
+#creating subset with order dates and year
+order_year=data.frame(OrderDate=sales$OrderDate, year=year(sales$OrderDate))
+#count of each date 
+order_freq=order_year %>% group_by(OrderDate, year) %>% summarize(count= n())
+#subset by year 
+order_freq_2018=subset(order_freq, year==2018)
+order_freq_2019=subset(order_freq, year==2019)
+order_freq_2020=subset(order_freq, year==2020)
+```
+
+```{r}
+#plots by year 
+#2018
+ggplot(order_freq_2018, aes(x=OrderDate, y=count)) + geom_line() + labs(x="Order Date", y="Number of Sales", title="Order Frequency in 2018") + theme_minimal() + geom_smooth() + scale_x_date(date_labels = "%b", date_breaks="1 month") 
+#2019
+ggplot(order_freq_2019, aes(x=OrderDate, y=count)) + geom_line() + labs(x="Order Date", y="Number of Sales", title="Order Frequency in 2019") + theme_minimal() + geom_smooth() + scale_x_date(date_labels = "%b", date_breaks="1 month")
+#2020
+ggplot(order_freq_2020, aes(x=OrderDate, y=count)) + geom_line() + labs(x="Order Date", y="Number of Sales", title="Order Frequency in 2020") + theme_minimal() + geom_smooth() + scale_x_date(date_labels = "%b", date_breaks="1 month")
+
+#plot by all years 
+ggplot(order_freq, aes(x=OrderDate, y=count)) + geom_line() + labs(x="Order Date", y="Number of Sales", title="Order Frequenc from 2018 to 2020") + theme_minimal() + geom_smooth() + scale_x_date(date_labels = "%b", date_breaks="1 month")
+
+#2018 shows decreases in sales during the early to mid winter, but the following years 2019 and 2020 show near straight line trends indicating consistent sales across all seasons
+```
+
+Sales based on channel 
+```{r}
+#plot of channel based on number of sales 
+ggplot(sales, aes(x=Sales.Channel, fill=Sales.Channel)) + geom_bar(stat="count") + labs(x="Sales Channel", y="Number of Sales (2018-2020)") 
+
+#plot of channel based on revenue = (Unit.Price*Order.Quantity)*(1-Discount.Applied)
+sales$Revenue=round(sales$Unit.Price*sales$Order.Quantity*(1-sales$Discount.Applied), 2)
+ggplot(sales, aes(x=Sales.Channel, y=Revenue, fill=Sales.Channel)) + geom_bar(stat="identity") + labs(x="Sales Channel", y="Total Revenue (2018-2020)")
+
+#plot of channel based on profit = revenue - (Unit.Cost*Order.Quantity)
+sales$Profit=round(sales$Revenue-(sales$Unit.Cost*sales$Order.Quantity),2)
+ggplot(sales, aes(x=Sales.Channel, y=Profit, fill=Sales.Channel)) + geom_bar(stat="identity") + labs(x="Sales Channel", y="Total Profit (2018-2020)")
+```
+
+
+Top products 
+```{r}
+#plot of product sales based on channel 
+ggplot(sales, aes(x=X_ProductID, fill=Sales.Channel)) + geom_bar() + labs(x="Product ID", y="Number of Sales (2018-2020)") 
+
+#plot of channel based on profit = revenue - (Unit.Cost*Order.Quantity)
+ggplot(sales, aes(x=X_ProductID, y=Profit, fill=Sales.Channel)) + geom_bar(stat="identity") + labs(x="Sales Channel", y="Total Profit of Product (2018-2020)")
+```
+
+
+
+Predicting Unit Price 
+```{r}
+#histrgram of response
+hist(sales$Unit.Price, xlab="Unit Price", main="")
+#with log transformation
+hist(log(sales$Unit.Price), xlab="Log Transformation of Unit Price", main="")
+
+#QQ plot with response
+qqnorm(sales$Unit.Price, main="QQ Plot of Unit Price")
+data=rnorm(100)
+qqline(data, col="blue", lwd=2)
+
+#QQ plot with log transform response
+qqnorm(log(sales$Unit.Price), main="QQ Plot of Log Transformation of Unit Price")
+data=rnorm(100)
+qqline(data, col="blue", lwd=2)
+```
+
+```{r}
+#convert dates into factors based on month to account for seasonal changes
+#creating new data frame for analysis 
+#drop customer ID, revenue, profit 
+sales_reg=sales[,c(2:8, 10:15)]
+#adding columns for month of each date variable for seasonal changes 
+sales_reg$OrderDate_Month=month(sales$OrderDate, label=TRUE, abbr=TRUE)
+#convert to factor 
+sales_reg$OrderDate_Month=as.factor(sales_reg$OrderDate_Month)
+#adding column for number of days to arrive after shipping date 
+sales_reg$ShippingTime=sales$DeliveryDate-sales$ShipDate
+#convert to numeric 
+sales_reg$ShippingTime=as.numeric(sales_reg$ShippingTime)
+
+#remove date columns and OrderNumber
+sales_reg$ProcuredDate=NULL
+sales_reg$OrderDate=NULL
+sales_reg$DeliveryDate=NULL
+sales_reg$ShipDate=NULL
+sales_reg$OrderNumber=NULL
+
+#standardize all numeric variables 
+numeric_vars=names(sales_reg)[sapply(sales_reg, is.numeric)]
+sales_reg=sales_reg %>% mutate(across(all_of(numeric_vars), datawizard::standardize))
+
+#create test/train split
+set.seed(123)
+index = sample(1:nrow(sales_reg), round(0.8 * nrow(sales_reg)))
+train=sales_reg[index,]
+test=sales_reg[-index,]
+```
+
+```{r}
+#relationship of response with predictors 
+for (i in c(1:3, 5:11)){
+  print(ggpairs(sales_reg[,c(9,i)], cardinality_threshold = 47))
+}
+```
+
+linear regression 
+```{r}
+#stepwise selection for linear regression
+full_lm_step=lm(Unit.Price~., data=train)
+null_lm_step=lm(Unit.Price~1, data=train)
+#stepwise selection based on BIC
+stepwise_model=step(null_lm_step, scope=list(lower=formula(null_lm_step), upper=formula(full_lm_step)), direction="both", k=log(nrow(train)), trace=FALSE)
+#select predictors of best model 
+step_pred=names(coef(stepwise_model))[-1] #remove intercept
+#create formula of best predictors 
+best_formula=as.formula(paste("Unit.Price ~", paste(step_pred, collapse = " + ")))
+
+#linear regression model-full
+sales_lm_full=lm(Unit.Price~., data=train)
+#linear regression model-reduced
+sales_lm_red=lm(best_formula, data=train)
+```
+
+```{r}
+#linear regression prediction
+pred_lm_full=predict(sales_lm_full, newdata=test[, !names(test) %in% "Unit.Price"])
+pred_lm_red=predict(sales_lm_red, newdata=test[, !names(test) %in% "Unit.Price"])
+
+#R-sqaured
+summary(sales_lm_full)$r.squared
+summary(sales_lm_red)$r.squared
+
+#root mean squared error (RMSE)
+sqrt(mean(pred_lm_full-test$Unit.Price)^2)
+sqrt(mean(pred_lm_red-test$Unit.Price)^2)
+
+#both reduced and full are very similar so are they statistically different
+anova(sales_lm_full, sales_lm_red)
+#p=0.9874 so the models do not significantly differ 
+
+#diagnostic plots 
+check_model(sales_lm_red)
+```
+
+nueral network 
+```{r}
+#create dummy variables for factor variables for neural network
+dummy_var_train=model.matrix(~Sales.Channel + WarehouseCode + OrderDate_Month + X_SalesTeamID + X_StoreID + X_ProductID - 1, data=train)
+dummy_var_test=model.matrix(~Sales.Channel + WarehouseCode + OrderDate_Month + X_SalesTeamID + X_StoreID + X_ProductID - 1, data=test)
+#train dataset for neural network 
+train_nn=cbind(train[, !names(train) %in% c("Sales.Channel", "WarehouseCode", "OrderDate_Month", "X_SalesTeamID", "X_StoreID", "X_ProductID")], dummy_var_train)
+#formula function is having trouble reading the column names so rename for ease 
+names(train_nn)=make.names(names(train_nn))
+
+#test dataset for neural network
+test_nn=cbind(test[, !names(test) %in% c("Sales.Channel", "WarehouseCode", "OrderDate_Month", "X_SalesTeamID", "X_StoreID", "X_ProductID")], dummy_var_test)
+#formula function is having trouble reading the column names so rename for ease 
+names(test_nn)=make.names(names(test_nn))
+
+#setting up formula for neural net
+#name of response variable
+response_var="Unit.Price"
+#names of predictor variables
+predictor_vars=names(train_nn)[!names(train_nn) %in% response_var]
+#enclose predictor variable names in backticks and collapse with +
+predictor_vars_backtick=paste0("`", predictor_vars, "`")
+formula_string=paste(predictor_vars_backtick, collapse="+")
+#combine response and predictors
+response_var_backtick=paste0("`", response_var, "`")
+full_formula_string=paste(response_var_backtick, "~", formula_string)
+#convert string to actual formula
+final_formula=as.formula(full_formula_string)
+
+#neural net model
+sales_nn=neuralnet(final_formula, data=train_nn, hidden = c(15,10), stepmax = 1e7, linear.output = TRUE)
+```
+
+neural network analysis 
+```{r}
+#neural network regression analysis 
+#neural network prediction
+pred_nn=compute(sales_nn, test_nn[, !names(test_nn) %in% "Unit.Price"])$net.result
+
+#root mean squared error (RMSE)
+sqrt(mean(pred_nn-test_nn$Unit.Price)^2)
+
+#R-squared 
+#total sum of squares
+tss=sum((test_nn$Unit.Price-mean(test_nn$Unit.Price))^2)
+#residual sum of squares
+rss=sum((test_nn$Unit.Price-pred_nn)^2)
+#calculate R-squared
+1-(rss/tss)
+
+#plot of actual vs. predicted 
+#combine actual and predicted dataset for plot 
+pred_plot=data.frame(actual=test_nn$Unit.Price, predicted=pred_nn, residuals=test_nn$Unit.Price-pred_nn)
+ggplot(pred_plot, aes(x=actual, y=predicted)) + geom_point() + geom_smooth() + theme_minimal() + labs(x="Actual Unit Price", y="Predictions of Unit Price", title="Predicted vs. Actual Values (Neural Network)")
+
+#plot of residuals vs. predicted
+ggplot(pred_plot, aes(x=predicted, y=residuals)) + geom_point() + geom_smooth() + theme_minimal() + labs(x="Predicted Values", y="Residuals", title="Residuals vs. Predicted (Neural Network)")
+
+#normality of residuals
+hist(pred_plot$residuals, xlab="Residuals", main="Histogram of Residuals (Neural Network)")
+
+#QQ plot of residuals 
+qqnorm(pred_plot$residuals, main="QQ Plot of Residuals (Neural Network)")
+qqline(pred_plot$residuals, col="blue")
+
+#scale-location 
+#standardize the residuals 
+pred_plot$stan_residuals=rstandard(lm(pred_plot$actual~pred_plot$predicted))
+ggplot(pred_plot, aes(x=predicted, y=sqrt(abs(stan_residuals)))) + geom_point() + geom_smooth() + theme_minimal() + labs(x="Predicted", y="sqrt(|Standardized Residuals|)", title="Scale-Location (Neural Network)")
+```
+
+
+
+
+
