@@ -15,24 +15,25 @@
 
 ## Sales - Channels
 
-![Sales Channel Number of Sales](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Sales%20Channel%20%23%20of%20Sales.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Sales%20Channel%20%23%20of%20Sales.png" width=700 height=400>
 
-![Sales Channel Total Revenue](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Sales%20Channel%20Total%20Revenue.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Sales%20Channel%20Total%20Revenue.png" width=700 height=400>
 
-![Sales Channel Total Profit](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Sales%20Channel%20Total%20Profit.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Sales%20Channel%20Total%20Profit.png" width=700 height=400>
 
 ## Sales - Products
 
-![Product Number of Sales](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Product%20%23%20of%20Sales.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Product%20%23%20of%20Sales.png" width=700 height=400>
 
-![Product Profits](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Product%20Profit.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Product%20Profit.png" width=700 height=400>
+
 
 ## Predicting Unit Price
 ### Response Variable 
 
-![Histogram of Unit Price](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Histogram%20of%20Unit%20Price.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Histogram%20of%20Unit%20Price.png" width=700 height=400>
 
-![QQ Plot of Unit Price](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/QQ%20Plot%20of%20Unit%20Price.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/QQ%20Plot%20of%20Unit%20Price.png" width=700 height=400>
 
 ### Linear Regression Model 
 
@@ -40,15 +41,15 @@
 
 ### Nueral Network Regression Model
 
-![Predicted vs. Actual Values (NN)](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Predicted%20vs.%20Actual%20(NN).png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Predicted%20vs.%20Actual%20(NN).png" width=700 height=400>
 
-![Residuals vs. Predicted (NN)](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Residuals%20vs.%20Predicted%20(NN).png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Residuals%20vs.%20Predicted%20(NN).png" width=700 height=400>
 
-![Histogram of Residuals (NN)](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Histogram%20of%20Residuals%20(NN).png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Histogram%20of%20Residuals%20(NN).png" width=700 height=400>
 
-![QQ Plot of Residuals (NN)](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/QQ%20Plot%20of%20Residuals%20(NN).png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/QQ%20Plot%20of%20Residuals%20(NN).png" width=700 height=400>
 
-![Scale-Location (NN)](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Scale-Location%20(NN).png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Scale-Location%20(NN).png" width=700 height=400>
 
 ### Model Comparisons
 
