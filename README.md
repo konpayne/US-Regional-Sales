@@ -5,10 +5,9 @@
 
 ## Sales - Seasonal Changes
 
-![Order Frequency in 2018](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Order%20Frequency%20in%202018.png)
 <img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Order%20Frequency%20in%202018.png" width=700 height=400>
 
-![Order Frequency in 2019](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Order%20Frequency%20in%202019.png)
+<img src="https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Order%20Frequency%20in%202018.png" width=700 height=400>
 
 ![Order Frequency in 2020](https://github.com/konpayne/US-Regional-Sales/blob/main/Images/Oder%20Frequency%20in%202020.png)
 
